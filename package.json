@@ -1,0 +1,17 @@
+{
+  "name": "global-components-wireframe",
+  "version": "1.0.0",
+  "description": "Monorepo for Global Components Wireframe project",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter web-frontend dev",
+    "build": "pnpm --filter web-frontend build",
+    "start:backend": "pnpm --filter web-backend start"
+  },
+  "devDependencies": {
+    "pnpm": "^10.33.0"
+  }
+}
