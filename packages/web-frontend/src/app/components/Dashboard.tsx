@@ -10,14 +10,18 @@ export function Dashboard() {
     bedroomFan: false,
     livingRoomTV: false,
   });
+  const [loading, setLoading] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSensorData = async () => {
       try {
         const response = await axios.get('http://localhost:3000/api/sensors/latest');
         setSensorData(response.data);
+        setError(null);
       } catch (error) {
         console.error('Error fetching sensor data:', error);
+        setError('Không thể lấy dữ liệu cảm biến');
       }
     };
 
@@ -30,17 +34,32 @@ export function Dashboard() {
     const newStatus = !devices[deviceKey as keyof typeof devices];
     const action = newStatus ? 'TURN_ON' : 'TURN_OFF';
 
+    setLoading(deviceKey);
     try {
-      await axios.post(`http://localhost:3000/api/devices/${deviceId}/control`, { action });
+      const response = await axios.post(`http://localhost:3000/api/devices/${deviceId}/control`, { action });
+      console.log('Device control response:', response.data);
       setDevices(prev => ({ ...prev, [deviceKey]: newStatus }));
+      setError(null);
     } catch (error) {
       console.error('Error controlling device:', error);
+      setError(`Lỗi điều khiển ${deviceKey}`);
+      // Revert the state if request fails
+      setDevices(prev => ({ ...prev, [deviceKey]: !newStatus }));
+    } finally {
+      setLoading(null);
     }
   };
 
   return (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
+
+      {/* Error Banner */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -188,7 +207,7 @@ export function Dashboard() {
                 </div>
               </div>
               <button
-                onClick={() => toggleDevice('livingRoomTV')}
+                onClick={() => toggleDevice('livingRoomTV', 4)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   devices.livingRoomTV ? 'bg-green-500' : 'bg-gray-300'
                 }`}

@@ -57,7 +57,7 @@ class MqttService {
         const feedKeys = [
             'humidity', 'temperature', 'door', 
             'fan-speed', 'fan-state', 'led-state', 
-            'rgb-state', 'system-state'
+            'tv-state', 'rgb-state', 'system-state'
         ];
 
         const topics = feedKeys.map(key => `${this.username}/feeds/${key}`);
@@ -94,7 +94,7 @@ class MqttService {
                 }
                 
                 // 2. Xử lý trạng thái Bật/Tắt, Đóng/Mở
-                else if (['led-state', 'fan-state', 'door'].includes(feedKey)) {
+                else if (['led-state', 'fan-state', 'door', 'tv-state'].includes(feedKey)) {
                     // Update thẳng theo feed_key thay vì type
                     await pool.execute(
                         'UPDATE devices SET status = ? WHERE feed_key = ?',

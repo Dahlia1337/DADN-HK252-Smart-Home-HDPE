@@ -33,6 +33,7 @@ CREATE TABLE system_configs (
 INSERT INTO devices (name, type, feed_key, status) VALUES 
 ('Living Room Light', 'light', 'led-state', 'OFF'),
 ('Bedroom Fan', 'fan', 'fan-state', 'OFF'),
-('Front Door', 'door', 'door', 'CLOSED');
+('Front Door', 'door', 'door', 'CLOSED'),
+('Living Room TV', 'tv', 'tv-state', 'OFF');
 
 INSERT INTO system_configs (key_name, value) VALUES ('temperature_threshold', '30');

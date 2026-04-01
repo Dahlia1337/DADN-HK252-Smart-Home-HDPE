@@ -25,13 +25,29 @@ class ApiController {
     async controlDevice(req, res) {
         try {
             const deviceId = req.params.id;
-            const { action } = req.body; // VD: "TURN_ON" [cite: 90]
+            const { action } = req.body; // VD: "TURN_ON" hoặc "TURN_OFF" [cite: 90]
 
-            // Sử dụng Observer Pattern để gửi lệnh qua MQTT [cite: 148]
-            mqttService.publishCommand(deviceId, action);
+            // Lấy device từ database để có feed_key
+            const device = await deviceRepository.getDeviceById(deviceId);
+            if (!device) {
+                return res.status(404).json({ error: 'Device not found' });
+            }
 
-            res.status(200).json({ action: action, success: true });
+            // Gửi lệnh MQTT với feed_key
+            const success = await mqttService.publishCommand(device.feed_key, action);
+
+            if (!success) {
+                return res.status(500).json({ error: 'Failed to send MQTT command' });
+            }
+
+            res.status(200).json({ 
+                deviceId: deviceId,
+                deviceName: device.name,
+                action: action, 
+                success: true 
+            });
         } catch (error) {
+            console.error('ERROR - controlDevice:', error);
             res.status(400).json({ error: 'Invalid input' }); 
         }
     }
