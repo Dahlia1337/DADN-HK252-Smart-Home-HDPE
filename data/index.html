@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IoT Smart Home Control System - HDPE</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" href="data:," />
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="logo-container">
+        <img
+          class="logo-img"
+          src="https://hcmut.edu.vn/img/logo.png"
+          alt="HCMUT Logo"
+        />
+      </div>
+      <div class="project-info">
+        <h3>IoT Smart Home</h3>
+        <p>Group: HDPE</p>
+      </div>
+      <div class="nav-item active" onclick="showSection('settings', event)">
+        <i class="fa-solid fa-gears"></i> <span>Cấu hình Hệ thống</span>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div id="settings" class="section settings-section">
+        <div class="settings-card">
+          <header class="card-header">
+            <h1>IoT Smart Home Control System</h1>
+            <p>
+              Chào mừng bạn đến với bảng điều khiển cấu hình. Vui lòng nhập
+              thông tin kết nối bên dưới.
+            </p>
+          </header>
+
+          <form id="settingsForm">
+            <div class="form-section">
+              <h3><i class="fa-solid fa-wifi"></i> Kết nối Wi-Fi</h3>
+              <div class="input-group">
+                <label>Tên Wi-Fi (SSID)</label>
+                <input
+                  type="text"
+                  id="ssid"
+                  placeholder="Nhập SSID..."
+                  required
+                />
+              </div>
+              <div class="input-group">
+                <label>Mật khẩu Wi-Fi</label>
+                <input
+                  type="password"
+                  id="password"
+                  placeholder="Nhập Password..."
+                  required
+                />
+              </div>
+            </div>
+            <button type="submit" class="btn-save">
+              <i class="fa-solid fa-paper-plane"></i> Lưu cấu hình & Kết nối
+            </button>
+          </form>
+        </div>
+
+        <footer class="footer">
+          <p>© 2026 HDPE Group - Ho Chi Minh City University of Technology</p>
+        </footer>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
