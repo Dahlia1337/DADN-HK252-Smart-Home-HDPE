@@ -3,11 +3,19 @@ import apiController from '../controllers/ApiController.js';
 
 const router = express.Router();
 
-// Các Endpoint 
+// Auth
 router.post('/login', apiController.login);
-router.get('/api/sensors/latest', apiController.getLatestSensors); 
-router.post('/api/devices/:id/control', apiController.controlDevice); 
-router.post('/api/config/threshold', apiController.configThreshold); 
-router.get('/api/logs', apiController.getLogs); 
+
+// Sensors
+router.get('/api/sensors/latest', apiController.getLatestSensors);
+
+// Devices
+// ✅ Route /status phải đặt TRƯỚC /:id để Express không hiểu nhầm "status" là id
+router.get('/api/devices/status', apiController.getDeviceStatus);
+router.post('/api/devices/:id/control', apiController.controlDevice);
+
+// Config & Logs
+router.post('/api/config/threshold', apiController.configThreshold);
+router.get('/api/logs', apiController.getLogs);
 
 export default router;

@@ -21,6 +21,8 @@ class MqttService {
             connectTimeout: 30000
         });
 
+        // Cache giữ giá trị cuối cùng nhận được — KHÔNG bao giờ reset về null
+        // Mục đích: khi chỉ nhận 1 trong 2, vẫn có đủ dữ liệu để INSERT vào DB
         this.sensorCache = {
             temperature: null,
             humidity: null
@@ -37,26 +39,29 @@ class MqttService {
 
     async publishCommand(feedKey, action) {
         if (!this.client?.connected) return false;
+        let value;
+        if (action === "ON" || action === "TURN_ON") value = "1";
+        else if (action === "OFF" || action === "TURN_OFF") value = "0";
+        else value = action.toString();
 
         const topic = `${this.username}/feeds/${feedKey}`;
-        this.client.publish(topic, action.toString(), { qos: 1 });
-        console.log(`📤 Published to ${topic}: ${action}`);
+        this.client.publish(topic, value, { qos: 1 });
 
-        try {
-            await pool.execute(
-                'INSERT INTO action_logs (device, action) VALUES (?, ?)',
-                [feedKey, action.toString()]
-            );
-        } catch (error) {
-            console.error('❌ Lỗi lưu action_log:', error);
-        }
+        console.log(`📤 Published to ${topic}: ${value}`);
+
+        await pool.execute(
+            'INSERT INTO action_logs (device, action) VALUES (?, ?)',
+            [feedKey, value]
+        );
+
         return true;
     }
 
+
     subscribeToAllFeeds() {
         const feedKeys = [
-            'humidity', 'temperature', 'door', 
-            'fan-speed', 'fan-state', 'led-state', 
+            'humidity', 'temperature', 'door',
+            'fan-speed', 'fan-state', 'led-state',
             'tv-state', 'rgb-state', 'system-state'
         ];
 
@@ -79,23 +84,25 @@ class MqttService {
                 // 1. Xử lý cảm biến Nhiệt độ / Độ ẩm
                 if (feedKey === 'temperature' || feedKey === 'humidity') {
                     const dataValue = parseFloat(dataString);
+
+                    // Cập nhật cache với giá trị mới nhận được
                     this.sensorCache[feedKey] = dataValue;
 
-                    if (this.sensorCache.temperature !== null && this.sensorCache.humidity !== null) {
+                    // Chỉ cần có ít nhất 1 giá trị hợp lệ là INSERT ngay
+                    // Giá trị còn lại lấy từ cache (lần nhận trước đó)
+                    // → Frontend luôn thấy dữ liệu mới nhất sau mỗi lần nhận bất kỳ sensor nào
+                    if (this.sensorCache.temperature !== null || this.sensorCache.humidity !== null) {
                         const [result] = await pool.execute(
                             'INSERT INTO sensor_logs (temperature, humidity) VALUES (?, ?)',
                             [this.sensorCache.temperature, this.sensorCache.humidity]
                         );
-                        console.log(`💾 Đã lưu thông số cảm biến (ID: ${result.insertId})`);
-                        
-                        this.sensorCache.temperature = null;
-                        this.sensorCache.humidity = null;
+                        console.log(`💾 Đã lưu thông số cảm biến (ID: ${result.insertId}) — temp: ${this.sensorCache.temperature}, hum: ${this.sensorCache.humidity}`);
+                        // Không reset cache → giá trị cũ vẫn dùng được cho lần nhận tiếp theo
                     }
                 }
-                
+
                 // 2. Xử lý trạng thái Bật/Tắt, Đóng/Mở
                 else if (['led-state', 'fan-state', 'door', 'tv-state'].includes(feedKey)) {
-                    // Update thẳng theo feed_key thay vì type
                     await pool.execute(
                         'UPDATE devices SET status = ? WHERE feed_key = ?',
                         [dataString, feedKey]
@@ -110,7 +117,6 @@ class MqttService {
 
                 // 3. Xử lý thông số mở rộng (Tốc độ quạt, Màu đèn)
                 else if (['fan-speed', 'rgb-state'].includes(feedKey)) {
-                    // Map fan-speed vào thiết bị fan-state, rgb-state vào thiết bị led-state
                     const targetFeedKey = feedKey === 'fan-speed' ? 'fan-state' : 'led-state';
 
                     await pool.execute(

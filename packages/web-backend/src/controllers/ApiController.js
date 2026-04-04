@@ -5,11 +5,13 @@ import systemConfigRepository from '../repositories/SystemConfigRepository.js';
 import mqttService from '../services/mqttService.js';
 
 class ApiController {
-    // 1. Lấy dữ liệu cảm biến mới nhất [cite: 74, 76]
+    // 1. Lấy dữ liệu cảm biến mới nhất
+    // Lấy temperature mới nhất và humidity mới nhất RIÊNG BIỆT từ sensor_logs
+    // → Đảm bảo frontend luôn thấy giá trị mới nhất của từng sensor
+    //   dù chúng không cùng được ghi trong 1 lần INSERT
     async getLatestSensors(req, res) {
         try {
             const data = await logRepository.getLatestSensorData();
-            // Trả về format yêu cầu [cite: 79, 80, 81, 82]
             res.status(200).json({
                 temperature: data ? data.temperature : 30.5,
                 humidity: data ? data.humidity : 70,
@@ -21,29 +23,42 @@ class ApiController {
         }
     }
 
-    // 2. Điều khiển thiết bị [cite: 84, 86]
+    // 2. Điều khiển thiết bị
     async controlDevice(req, res) {
         try {
             const deviceId = req.params.id;
-            const { action } = req.body; // VD: "TURN_ON" hoặc "TURN_OFF" [cite: 90]
+            const { action } = req.body; // "TURN_ON" hoặc "TURN_OFF"
 
-            // Lấy device từ database để có feed_key
             const device = await deviceRepository.getDeviceById(deviceId);
             if (!device) {
                 return res.status(404).json({ error: 'Device not found' });
             }
 
-            // Gửi lệnh MQTT với feed_key
+            // Gửi lệnh MQTT
             const success = await mqttService.publishCommand(device.feed_key, action);
-
             if (!success) {
                 return res.status(500).json({ error: 'Failed to send MQTT command' });
             }
 
+            // door dùng OPEN/CLOSED, các thiết bị khác dùng ON/OFF
+            let newStatus;
+            if (device.feed_key === 'door') {
+                newStatus = action === 'TURN_ON' ? 'OPEN' : 'CLOSED';
+            } else {
+                newStatus = action === 'TURN_ON' ? 'ON' : 'OFF';
+            }
+
+            await deviceRepository.updateDevice(deviceId, {
+                name: device.name,
+                type: device.type,
+                status: newStatus,
+            });
+
             res.status(200).json({ 
                 deviceId: deviceId,
                 deviceName: device.name,
-                action: action, 
+                action: action,
+                status: newStatus,
                 success: true 
             });
         } catch (error) {
@@ -52,36 +67,43 @@ class ApiController {
         }
     }
 
-    // 3. Cấu hình ngưỡng nhiệt độ [cite: 92, 94]
+    // ✅ Trả về trạng thái on/off của tất cả device cho frontend khi reload
+    async getDeviceStatus(req, res) {
+        try {
+            const statusMap = await deviceRepository.getDeviceStatusMap();
+            res.status(200).json(statusMap);
+        } catch (error) {
+            console.error('ERROR - getDeviceStatus:', error);
+            res.status(500).json({ error: 'Server error' });
+        }
+    }
+
+    // 3. Cấu hình ngưỡng nhiệt độ
     async configThreshold(req, res) {
         try {
             const { temperature } = req.body; 
-
             await systemConfigRepository.setThreshold(temperature);
-
             res.status(200).json({ temperature: temperature, success: true }); 
         } catch (error) {
             res.status(500).json({ error: 'Server error' });
         }
     }
 
-    // 4. Truy vấn nhật ký (Logs) [cite: 100, 102]
+    // 4. Truy vấn nhật ký (Logs)
     async getLogs(req, res) {
         try {
             const { from, to } = req.query;
             const logs = await logRepository.getLogs(from, to);
-
-            res.status(200).json(logs); // Trả về mảng logs [cite: 105]
+            res.status(200).json(logs);
         } catch (error) {
             res.status(500).json({ error: 'Server error' });
         }
     }
 
-    // 5. API Đăng nhập (Mở rộng từ Sequence Diagram) [cite: 62, 65]
+    // 5. Đăng nhập
     async login(req, res) {
         const { user, pass } = req.body; 
-        // TODO: Validate trong DB
-        if (user === 'admin' && pass === 'password') { // Giả lập hợp lệ 
+        if (user === 'admin' && pass === 'password') {
             const token = "fake-jwt-token";
             res.status(200).json({ token: token, redirect: '/dashboard' }); 
         } else {
