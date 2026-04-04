@@ -23,13 +23,9 @@ void ledControl(int state)
     if (state == 0)
     {
         digitalWrite(LED_GPIO, LOW);
-        servoControl(90);
-        stepControl(0);
     }
     else
     {
         digitalWrite(LED_GPIO, HIGH);
-        servoControl(0);
-        stepControl(1);
     }
 }

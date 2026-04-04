@@ -13,14 +13,14 @@ void lcd_setup();
 void lcdTask(void *pvParameters);
 
 void step_setup();
-void stepControl(int state);
+void step_control(int state);
 void stepperTask(void *pvParameters);
 
-void servo_setup();
-void servoControl(int state);
+void door_setup();
+void door_control(int state);
 
 void fan_setup();
-void fanControl(int state);
+void fan_control(int state);
 
 
 #endif

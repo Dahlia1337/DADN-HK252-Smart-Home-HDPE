@@ -33,8 +33,10 @@ void lcdTask(void *pvParameters)
         lcd.setCursor(0, 0);
         lcd.print("Smart-Home  HDPE");
 
-
-
+        lcd.setCursor(1, 0);
+        char buffer[17];
+        snprintf(buffer, sizeof(buffer), "T:%.1f H:%.1f%%", glob_temperature, glob_humidity);
+        lcd.print(buffer);
 
         vTaskDelay(200);
     }
@@ -46,7 +48,7 @@ void step_setup()
     stepper.setAcceleration(500.0);
 };
 
-void stepControl(int state)
+void step_control(int state)
 {
     switch (state)
     {
@@ -74,7 +76,7 @@ void stepperTask(void *pvParameters)
     }
 }
 
-void servo_setup()
+void door_setup()
 {
     door.attach(SERVO_PIN);
 };
@@ -84,12 +86,12 @@ void fan_setup()
     pinMode(FAN_PIN, OUTPUT);
 };
 
-void servoControl(int state)
+void door_control(int state)
 {
     door.write(state);
 };
 
-void fanControl(int state)
+void fan_control(int state)
 {
     switch (state)
     {
@@ -103,6 +105,10 @@ void fanControl(int state)
 
     case 2:
         analogWrite(FAN_PIN, 255);
+        break;
+
+    case 3:
+        analogWrite(FAN_PIN, 0);
         break;
 
     default:

@@ -1,14 +1,18 @@
 #include "adafruit_connect.h"
 #include "led_blinky.h"
 #include "component_control.h"
+#include "neo_blinky.h"
 
 WiFiClient client;
 Adafruit_MQTT_Client mqtt(&client, MQTT_SERVER, MQTT_PORT, MQTT_USERNAME, MQTT_KEY);
 
 // --- Setup feed ---
 //  Subscribe
-Adafruit_MQTT_Subscribe led_control = Adafruit_MQTT_Subscribe(&mqtt, MQTT_USERNAME "/feeds/led-state");
-Adafruit_MQTT_Subscribe fan_control = Adafruit_MQTT_Subscribe(&mqtt, MQTT_USERNAME "/feeds/fan-state");
+Adafruit_MQTT_Subscribe led_feed = Adafruit_MQTT_Subscribe(&mqtt, MQTT_USERNAME "/feeds/led-state");
+Adafruit_MQTT_Subscribe fan_feed = Adafruit_MQTT_Subscribe(&mqtt, MQTT_USERNAME "/feeds/fan-state");
+Adafruit_MQTT_Subscribe rgb_feed = Adafruit_MQTT_Subscribe(&mqtt, MQTT_USERNAME "/feeds/rgb-state");
+Adafruit_MQTT_Subscribe door_feed = Adafruit_MQTT_Subscribe(&mqtt, MQTT_USERNAME "/feeds/door-state");
+
 //  Publish
 Adafruit_MQTT_Publish temp_feed = Adafruit_MQTT_Publish(&mqtt, MQTT_USERNAME "/feeds/temperature");
 Adafruit_MQTT_Publish humi_feed = Adafruit_MQTT_Publish(&mqtt, MQTT_USERNAME "/feeds/humidity");
@@ -17,8 +21,10 @@ unsigned long lastPublishTime = 0;
 
 void mqtt_setup()
 {
-    mqtt.subscribe(&led_control);
-    mqtt.subscribe(&fan_control);
+    mqtt.subscribe(&led_feed);
+    mqtt.subscribe(&fan_feed);
+    mqtt.subscribe(&rgb_feed);
+    mqtt.subscribe(&door_feed);
 };
 
 void mqtt_reconnect()
@@ -46,7 +52,6 @@ void mqtt_reconnect()
 
 void mqtt_task(void *pvParameters)
 {
-    // Đợi 5s ban đầu để Wifi ổn định hoàn toàn
     vTaskDelay(pdMS_TO_TICKS(5000));
     Serial.println(" --- MQTT Task Started --- ");
 
@@ -61,15 +66,27 @@ void mqtt_task(void *pvParameters)
         Adafruit_MQTT_Subscribe *subscription;
         while ((subscription = mqtt.readSubscription(5))) 
         {
-            if (subscription == &led_control)
+            if (subscription == &led_feed)
             {
-                Serial.printf("Receive: led = %s\n", (char *)led_control.lastread);
-                ledControl(atoi((char *)led_control.lastread));
+                Serial.printf("Receive: led = %s\n", (char *)led_feed.lastread);
+                ledControl(atoi((char *)led_feed.lastread));
             }
-            else if (subscription == &fan_control)
+            else if (subscription == &fan_feed)
             {
-                Serial.printf("Receive: fan = %s\n", (char *)fan_control.lastread);
-                fanControl(atoi((char *)fan_control.lastread));
+                Serial.printf("Receive: fan = %s\n", (char *)fan_feed.lastread);
+                fan_control(atoi((char *)fan_feed.lastread));
+            }
+            
+            else if (subscription == &rgb_feed)
+            {
+                Serial.printf("Receive: led = %s\n", (char *)rgb_feed.lastread);
+                rgb_control(atoi((char *)rgb_feed.lastread));
+            }
+
+            else if (subscription == &door_feed)
+            {
+                Serial.printf("Receive: door = %s\n", (char *)door_feed.lastread);
+                door_control(atoi((char *)door_feed.lastread));
             }
         }
 
