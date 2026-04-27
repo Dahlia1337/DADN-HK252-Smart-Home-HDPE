@@ -7,4 +7,8 @@
 
 #include "esp_camera.h"
 
+#define LED_PIN 33
+
+extern int result;
+
 #endif
