@@ -1,16 +1,13 @@
 #include "temp_humi.h"
 
 // Khai báo biến toàn cục
-DHT20 dht20;
-// LiquidCrystal_I2C lcd(33, 16, 2); // Lưu ý: Kiểm tra kỹ địa chỉ 33 (0x21)
 
-// Hàm setup riêng cho phần này (được gọi 1 lần từ main.cpp)
+DHT dht(DHTPIN, DHTTYPE);
+
 void setup_monitoring_system()
 {
-
-    Wire.begin(11, 12);
-    dht20.begin();
-
+    dht.begin();
+    Serial.println("---DHT22 sensor ready---");
 }
 
 void temp_humi(void *pvParameters)
@@ -18,9 +15,8 @@ void temp_humi(void *pvParameters)
 
     while (1)
     {
-        dht20.read();
-        float temperature = dht20.getTemperature();
-        float humidity = dht20.getHumidity();
+        float temperature = dht.readTemperature();
+        float humidity = dht.readHumidity();
 
         if (isnan(temperature) || isnan(humidity))
         {

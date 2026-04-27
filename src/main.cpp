@@ -12,6 +12,7 @@
 #include "task_webserver.h"
 #include "adafruit_connect.h"
 #include "component_control.h"
+#include "tinyml.h"
 
 void setup()
 {
@@ -19,24 +20,22 @@ void setup()
     delay(5000);
     Serial.println("------ ESP32 start ------");
     check_info_File(0);
-    //Delete_info_File();
-
+    // Delete_info_File();
+    
     setup_monitoring_system();
     rgb_setup();
     led_setup();
     fan_setup();
-    door_setup();
-    step_setup();
-    lcd_setup();
     mqtt_setup();
+    
 
-    // xTaskCreate(led_blinky, "Task LED Blink", 2048, NULL, 2, NULL);
-    //xTaskCreate(neo_animation, "Task NEO Blink", 2048, NULL, 2, NULL);
+    // xTaskCreate(Task_Toogle_BOOT, "Task Toogle Boot", 1024, NULL, 3, NULL);
+    xTaskCreate(led_blinky, "Task LED Blink", 2048, NULL, 2, NULL);
+    xTaskCreate(neo_animation, "Task NEO Blink", 2048, NULL, 2, NULL);
     xTaskCreate(temp_humi, "Task TEMP HUMI", 4096, NULL, 2, NULL);
-    xTaskCreate(stepperTask, "Task stepper", 2048, NULL, 2, NULL);
-    xTaskCreate(lcdTask, "Task LCD", 2048, NULL, 2, NULL);
-    // xTaskCreate( tiny_ml_task, "Tiny ML Task" ,2048  ,NULL  ,2 , NULL);
+    xTaskCreate( tiny_ml_task, "Tiny ML Task" , 8192, NULL, 2, NULL);
     xTaskCreate(mqtt_task, "MQTT Task", 8192, NULL, 2, NULL);
+    
 }
 
 void loop()

@@ -38,12 +38,6 @@ void startSTA()
     {
         Serial.print("✅ STA Đã kết nối. Local IP: ");
         Serial.println(WiFi.localIP());
-        // Give a semaphore here
-        if (MDNS.begin("grouphdpe"))
-        {
-            Serial.println("✅ mDNS updated for STA: http://grouphdpe.local");
-            MDNS.addService("http", "tcp", 80);
-        }
     }
     else
     {

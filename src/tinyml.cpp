@@ -1,4 +1,6 @@
 #include "tinyml.h"
+#include "component_control.h"
+
 float result = 0.0;
 // Globals, for the convenience of one-shot setup.
 namespace
@@ -8,7 +10,7 @@ namespace
     tflite::MicroInterpreter *interpreter = nullptr;
     TfLiteTensor *input = nullptr;
     TfLiteTensor *output = nullptr;
-    constexpr int kTensorArenaSize = 8 * 1024; // Adjust size based on your model
+    constexpr int kTensorArenaSize = 8 * 1024;
     uint8_t tensor_arena[kTensorArenaSize];
 } // namespace
 
@@ -18,7 +20,7 @@ void setupTinyML()
     static tflite::MicroErrorReporter micro_error_reporter;
     error_reporter = &micro_error_reporter;
 
-    model = tflite::GetModel(dht_anomaly_model_tflite); // g_model_data is from model_data.h
+    model = tflite::GetModel(dht_anomaly_model_tflite);
     if (model->version() != TFLITE_SCHEMA_VERSION)
     {
         error_reporter->Report("Model provided is schema version %d, not equal to supported version %d.",
@@ -67,8 +69,9 @@ void tiny_ml_task(void *pvParameters)
 
         // Get and process output
         result = output->data.f[0];
-        Serial.print("Inference result: ");
-        Serial.println(result);
+        Serial.printf("Inference result: %.2f\n", result);
+        if (fan_state == 3)
+            fan_control(3);
         vTaskDelay(5000);
     }
 }

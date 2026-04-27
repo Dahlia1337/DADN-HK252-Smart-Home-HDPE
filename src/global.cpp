@@ -4,7 +4,7 @@
 float glob_temperature = 20;
 float glob_humidity = 30;
 float led_state = 0;
-float fan_speed = 0;
+int fan_speed = 0;
 int fan_state = 0;
 bool system_state = false;
 

@@ -9,22 +9,21 @@
 
 #define ADAFRUIT
 
-#ifdef AT_LAB   
-#define LED_GPIO        48
-#define NEO_PIN         45
-#else
-#define LED_GPIO        48
-#define NEO_PIN         45
-#endif
+#define LED1_PIN        43
+#define LED2_PIN        44
+#define NEO_PIN         38
 
-#define RGB_PIXELS_PIN  8
-#define FAN_PIN         6
-#define SERVO_PIN       5
+#define FAN_PIN         5
+#define FAN_IN1         6
+#define FAN_IN2         7
+
+#define DHTPIN          4
+#define DHTTYPE         DHT22
 
 extern float glob_temperature;
 extern float glob_humidity;
 extern float led_state;
-extern float fan_speed;
+extern int fan_speed;
 extern int fan_state;
 extern bool system_state;
 

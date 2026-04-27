@@ -6,7 +6,7 @@
 //     pixel.setBrightness(0);
 //     pixel.setPixelColor(0,pixel.Color(255,255,255));
 
-Adafruit_NeoPixel rgb(4, RGB_PIXELS_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel rgb(1, NEO_PIN, NEO_GRB + NEO_KHZ800);
 
 void rgb_setup()
 {
@@ -16,8 +16,7 @@ void rgb_setup()
 
 void rgb_control(int color)
 {
-    for (int i = 0; i < 4; i++)
-        rgb.setPixelColor(i, rgb.gamma32(rgb.ColorHSV(color)));
+    rgb.setPixelColor(0, rgb.gamma32(rgb.ColorHSV(color)));
     rgb.show();
 };
 
